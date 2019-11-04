@@ -20,6 +20,7 @@ in
       python3
       vulkan-validation-layers
       xlibs.libX11
+      vulkan-tools
     ];
 
     RUST_BACKTRACE = 1;
