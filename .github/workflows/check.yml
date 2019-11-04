@@ -13,9 +13,8 @@ jobs:
     - name: Cachix
       uses: cachix/cachix-action@v2
       with:
+        name: marvin
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-    - name: Set up Cachix
-      run: cachix use marvin
     - name: Build
       run: nix-shell ./shell.nix --run "cargo build"
     - name: Run tests
