@@ -25,4 +25,4 @@ jobs:
     - name: Rustfmt
       run: nix-shell ./shell.nix --run "cargo fmt -- --check"
     - name: Update Cachix
-      run: nix-store -qR --include-outputs $(nix-instantiate ./shell.nix) | cachix push marvin
+      run: nix-store -qR $(nix-instantiate ./shell.nix) | cachix push marvin
