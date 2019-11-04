@@ -1,0 +1,23 @@
+name: Rust
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build
+      run: cargo build
+    - name: Run tests
+      run: cargo test
+    - name: Clippy
+      run: |
+        rustup component add clippy
+        cargo clippy
+    - name: Rustfmt
+      run: |
+        rustup component add rustfmt
+        cargo fmt --check
