@@ -1,19 +1,34 @@
-name: Rust
+name: Checks
 
 on: [push]
 
 jobs:
   build:
-
+    name: Build
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v1
     - uses: cachix/install-nix-action@v2
     - name: Build
       run: nix-shell ./shell.nix --run "cargo build"
+
+  test:
+    name: Run Unit Tests
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: cachix/install-nix-action@v2
     - name: Run tests
       run: nix-shell ./shell.nix --run "cargo test"
+
+  lint:
+    name: Linting (Clippy and Rustfmt)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: cachix/install-nix-action@v2
     - name: Clippy
       run: nix-shell ./shell.nix --run "cargo clippy"
     - name: Rustfmt
