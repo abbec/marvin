@@ -21,6 +21,7 @@ in
       vulkan-validation-layers
       xlibs.libX11
       vulkan-tools
+      sccache
     ];
 
     RUST_BACKTRACE = 1;

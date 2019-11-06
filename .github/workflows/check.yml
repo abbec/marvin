@@ -1,4 +1,4 @@
-name: Checks
+name: Linux
 
 on: [push]
 
@@ -9,72 +9,69 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: cachix/install-nix-action@v3
-    - name: Cache cargo registry
+    - name: Cache
       uses: actions/cache@v1
       with:
-        path: ~/.cargo/registry
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-    - name: Cache cargo index
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo/git
-        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-    - name: Cache cargo build
-      uses: actions/cache@v1
-      with:
-        path: target
-        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+        path: ./.cache
+        key: ${{ runner.os }}-cargo-build-cache-${{ hashFiles('**/Cargo.lock') }}
+    - name: Install Prereqs
+      run: nix-shell ./shell.nix --command exit
     - name: Build
-      run: nix-shell ./shell.nix --run "cargo build"
-
+      env:
+        RUSTC_WRAPPER: sccache
+        SCCACHE_CACHE_SIZE: "300M"
+        CARGO_HOME: ./.cache/cargo
+      run: |
+        mkdir -p $PWD/.cache/cargo $PWD/.cache/target
+        nix-shell ./shell.nix --run "SCCACHE_DIR=$PWD/.cache/target sccache --start-server && cargo build"
+      
   test:
     name: Run Unit Tests
-    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
     - uses: cachix/install-nix-action@v3
-    - name: Cache cargo registry
+    - name: Cache
       uses: actions/cache@v1
       with:
-        path: ~/.cargo/registry
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-    - name: Cache cargo index
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo/git
-        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-    - name: Cache cargo build
-      uses: actions/cache@v1
-      with:
-        path: target
-        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-    - name: Run tests
-      run: nix-shell ./shell.nix --run "cargo test"
+        path: ./.cache
+        key: ${{ runner.os }}-cargo-test-cache-${{ hashFiles('**/Cargo.lock') }}
+    - name: Install Prereqs
+      run: nix-shell ./shell.nix --command exit
+    - name: Build
+      env:
+        RUSTC_WRAPPER: sccache
+        SCCACHE_CACHE_SIZE: "300M"
+        CARGO_HOME: ./.cache/cargo
+      run: |
+        mkdir -p $PWD/.cache/cargo $PWD/.cache/target
+        nix-shell ./shell.nix --run "SCCACHE_DIR=$PWD/.cache/target sccache --start-server && cargo test"
 
   lint:
     name: Linting (Clippy and Rustfmt)
-    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
     - uses: cachix/install-nix-action@v3
-    - name: Cache cargo registry
+    - name: Cache
       uses: actions/cache@v1
       with:
-        path: ~/.cargo/registry
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-    - name: Cache cargo index
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo/git
-        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-    - name: Cache cargo build
-      uses: actions/cache@v1
-      with:
-        path: target
-        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-    - name: Clippy
-      run: nix-shell ./shell.nix --run "cargo clippy"
+        path: ./.cache
+        key: ${{ runner.os }}-cargo-lint-cache-${{ hashFiles('**/Cargo.lock') }}
+    - name: Install Prereqs
+      run: nix-shell ./shell.nix --command exit
     - name: Rustfmt
-      run: nix-shell ./shell.nix --run "cargo fmt -- --check"
+      env:
+        RUSTC_WRAPPER: sccache
+        SCCACHE_CACHE_SIZE: "300M"
+        CARGO_HOME: ./.cache/cargo
+      run: |
+        mkdir -p $PWD/.cache/cargo $PWD/.cache/target
+        nix-shell ./shell.nix --run "SCCACHE_DIR=$PWD/.cache/target sccache --start-server && cargo fmt -- --check"
+    - name: Clippy
+      env:
+        RUSTC_WRAPPER: sccache
+        CARGO_HOME: ./.cache/cargo
+      run: |
+        mkdir -p $PWD/.cache/cargo $PWD/.cache/target
+        nix-shell ./shell.nix --run "cargo clippy"
